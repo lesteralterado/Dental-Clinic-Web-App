@@ -3,6 +3,7 @@ import { AppError, ErrorCode } from '../middleware/error';
 import { logger } from '../utils/logger';
 import mongoose from 'mongoose';
 import { sanitizeString, sanitizeSearchQuery } from '../utils/sanitizer';
+import notificationService from '../services/notificationService';
 
 export interface CreateAppointmentData {
   patientId: string;
@@ -81,6 +82,24 @@ export const appointmentService = {
     }
 
     logger.info(`Appointment created: ${appointment._id}`);
+    
+    // Send notification to the dentist about new appointment
+    try {
+      await notificationService.sendAppointmentNotification(
+        dentist._id.toString(),
+        undefined, // FCM token would need to be stored in User model
+        {
+          patientName: patient.name,
+          date: appointment.appointmentDate,
+          time: appointment.appointmentTime,
+        }
+      );
+      logger.info(`Notification sent to dentist ${dentist._id} for appointment ${appointment._id}`);
+    } catch (notificationError) {
+      // Log but don't fail the appointment creation if notification fails
+      logger.warn(`Failed to send notification to dentist: ${notificationError}`);
+    }
+    
     return appointment;
   },
 
