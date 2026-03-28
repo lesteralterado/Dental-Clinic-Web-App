@@ -7,8 +7,9 @@ import {
   ArrowLeft, Calendar, Clock, User, FileText, Loader2, Check
 } from 'lucide-react';
 import { Patient } from '@/lib/types';
+import { patientService } from '@/lib/api/patients';
+import { appointmentService } from '@/lib/api/appointments';
 import { useNotifications } from '@/hooks/useNotifications';
-import { mockPatientService } from '@/lib/mock';
 
 export default function NewAppointmentPage() {
   const router = useRouter();
@@ -22,9 +23,9 @@ export default function NewAppointmentPage() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
 
-  // Use mock data for demo
-  const patientSvc = mockPatientService;
-  const appointmentSvc = mockAppointmentService;
+  // Use real API services
+  const patientSvc = patientService;
+  const appointmentSvc = appointmentService;
 
   const [formData, setFormData] = useState({
     patientId: patientIdParam || '',

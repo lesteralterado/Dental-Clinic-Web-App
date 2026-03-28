@@ -91,19 +91,38 @@ export default function BoxScanner({ isOpen, onClose, onCapture, onQRScan, isPro
 
         if (code) {
           setScanning(false);
+          console.log('[QR Scanner] Raw QR data:', code.data);
+          
           // Try to parse as JSON
+          let patientId: string | null = null;
+          
           try {
             const data = JSON.parse(code.data);
-            if (data.id && onQRScan) {
-              onQRScan(data.id);
-              return;
+            console.log('[QR Scanner] Parsed JSON data:', data);
+            
+            // Handle multiple JSON formats
+            if (data.id) {
+              patientId = data.id;
+              console.log('[QR Scanner] Found patient ID in data.id:', patientId);
+            } else if (data.patientId) {
+              patientId = data.patientId;
+              console.log('[QR Scanner] Found patient ID in data.patientId:', patientId);
+            } else if (data.qrCode) {
+              // Try to find patient by qrCode
+              console.log('[QR Scanner] Found qrCode in data:', data.qrCode);
+              // For qrCode, we need to look it up in the check-in page
+              patientId = data.qrCode;
             }
           } catch (e) {
             // If not JSON, use as patient ID directly
-            if (onQRScan) {
-              onQRScan(code.data);
-              return;
-            }
+            console.log('[QR Scanner] Not JSON, using as direct patient ID');
+            patientId = code.data;
+          }
+
+          if (patientId && onQRScan) {
+            onQRScan(patientId);
+          } else {
+            console.error('[QR Scanner] No valid patient ID found in QR code');
           }
         }
       }

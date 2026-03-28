@@ -5,15 +5,14 @@ import { useParams, useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { 
   ArrowLeft, User, MapPin, Phone, Mail, Calendar, Briefcase, 
-  Heart, MessageSquare, QrCode, Send, Edit, Trash2, Loader2
+  Heart, MessageSquare, QrCode, Send, Edit, Trash2, Loader2, Check
 } from 'lucide-react';
 import { Patient } from '@/lib/types';
 import QRCodeComponent from '@/components/QRCode';
 import PaymentHistory from '@/components/patient/payment-history';
 
-// Use mock data for demo
-const USE_MOCK_DATA = true;
-import { mockPatientService } from '@/lib/mock';
+// Use API services for real backend data
+import { patientService } from '@/lib/api/patients';
 
 export default function PatientDetailPage() {
   const params = useParams();
@@ -23,8 +22,8 @@ export default function PatientDetailPage() {
   const [sendingEmail, setSendingEmail] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
 
-  // Choose service based on demo mode
-  const patientSvc = USE_MOCK_DATA ? mockPatientService : null;
+  // Use real API service
+  const patientSvc = patientService;
 
   useEffect(() => {
     const fetchPatient = async () => {
@@ -209,21 +208,22 @@ export default function PatientDetailPage() {
               <button
                 onClick={sendQREmail}
                 disabled={sendingEmail}
-                className="w-full inline-flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-xl font-medium shadow-lg shadow-blue-500/30 hover:shadow-xl hover:shadow-blue-500/40 transition-all disabled:opacity-50"
+                className={`w-full inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-medium shadow-lg shadow-blue-500/30 transition-all ${
+                  sendingEmail
+                    ? 'bg-slate-200 text-slate-500 cursor-not-allowed'
+                    : emailSent
+                    ? 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white'
+                    : 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white hover:shadow-xl hover:shadow-blue-500/40'
+                }`}
               >
                 {sendingEmail ? (
                   <Loader2 className="w-5 h-5 animate-spin" />
                 ) : emailSent ? (
-                  <>
-                    <Send className="w-5 h-5" />
-                    Sent!
-                  </>
+                  <Check className="w-5 h-5" />
                 ) : (
-                  <>
-                    <Send className="w-5 h-5" />
-                    Send QR via Email
-                  </>
+                  <Send className="w-5 h-5" />
                 )}
+                {sendingEmail ? 'Sending...' : emailSent ? 'Sent!' : 'Send QR via Email'}
               </button>
             )}
           </div>

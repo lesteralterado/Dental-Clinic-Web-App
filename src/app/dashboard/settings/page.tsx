@@ -7,6 +7,7 @@ import {
   LogOut, ChevronRight, Save, Check, Loader2, RefreshCw
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { useAuth } from '@/lib/context/AuthContext';
 
 // Mock user data - in real app this would come from auth context
 const mockUser = {
@@ -18,6 +19,7 @@ const mockUser = {
 
 export default function SettingsPage() {
   const router = useRouter();
+  const { logout } = useAuth();
   const [darkMode, setDarkMode] = useState(false);
   const [isEditingName, setIsEditingName] = useState(false);
   const [editedName, setEditedName] = useState(mockUser.name);
@@ -44,6 +46,7 @@ export default function SettingsPage() {
 
   const handleLogout = () => {
     if (confirm('Are you sure you want to logout?')) {
+      logout();
       router.push('/login');
     }
   };

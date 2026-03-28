@@ -7,7 +7,7 @@ import {
   Calendar, Clock, User, FileText, Loader2, ArrowLeft, Save, Check
 } from 'lucide-react';
 import { Appointment, AppointmentStatus } from '@/lib/types';
-import { mockAppointmentService, mockPatientService } from '@/lib/mock';
+import { appointmentService } from '@/lib/api/appointments';
 import { format } from 'date-fns';
 
 export default function EditAppointmentPage() {
@@ -43,7 +43,7 @@ export default function EditAppointmentPage() {
 
         // For existing appointments, fetch the data
         if (appointmentId) {
-          const appointments = await mockAppointmentService.getAll({ date: '' });
+          const appointments = await appointmentService.getAll({ date: '' });
           const apt = appointments.find(a => a.id === appointmentId);
           
           if (apt) {

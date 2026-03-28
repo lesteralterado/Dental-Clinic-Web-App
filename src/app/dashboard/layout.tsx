@@ -115,7 +115,7 @@ export default function DashboardLayout({
       </AnimatePresence>
 
       {/* Desktop Sidebar */}
-      <aside className="hidden lg:fixed lg:left-0 lg:top-0 lg:bottom-0 lg:w-72 lg:h-screen bg-white border-r border-slate-200 shadow-sm">
+      <aside className="hidden lg:flex fixed left-0 top-0 bottom-0 w-72 bg-white border-r border-slate-200 shadow-sm">
         <SidebarContent pathname={pathname} onLogout={logout} user={user} />
       </aside>
 

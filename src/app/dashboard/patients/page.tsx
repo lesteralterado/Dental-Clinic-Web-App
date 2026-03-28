@@ -6,9 +6,8 @@ import { Search, Plus, Filter, MoreVertical, Phone, Mail, Calendar, QrCode, User
 import { Patient } from '@/lib/types';
 import Link from 'next/link';
 
-// Use mock data for demo
-const USE_MOCK_DATA = true;
-import { mockPatientService } from '@/lib/mock';
+// Use API services for real backend data
+import { patientService } from '@/lib/api/patients';
 
 export default function PatientsPage() {
   const [patients, setPatients] = useState<Patient[]>([]);
@@ -17,8 +16,8 @@ export default function PatientsPage() {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
 
-  // Choose service based on demo mode
-  const patientSvc = USE_MOCK_DATA ? mockPatientService : null;
+  // Use real API service
+  const patientSvc = patientService;
 
   useEffect(() => {
     const fetchPatients = async () => {

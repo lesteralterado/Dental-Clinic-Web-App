@@ -9,9 +9,8 @@ import {
 } from 'lucide-react';
 import { Patient } from '@/lib/types';
 
-// Use mock data for demo
-const USE_MOCK_DATA = true;
-import { mockPatientService } from '@/lib/mock';
+// Use API services for real backend data
+import { patientService } from '@/lib/api/patients';
 
 interface FormData {
   name: string;
@@ -52,8 +51,8 @@ export default function EditPatientPage() {
   const [error, setError] = useState('');
   const [saved, setSaved] = useState(false);
 
-  // Choose service based on demo mode
-  const patientSvc = USE_MOCK_DATA ? mockPatientService : null;
+  // Use real API service
+  const patientSvc = patientService;
 
   useEffect(() => {
     const fetchPatient = async () => {

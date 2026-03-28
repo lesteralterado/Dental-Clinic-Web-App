@@ -40,13 +40,19 @@ export const mockPatientService = {
     return patient;
   },
 
+  async getByQRCode(qrCode: string): Promise<Patient | null> {
+    const patient = mockPatients.find(p => p.qrCode === qrCode);
+    return patient || null;
+  },
+
   async search(query: string): Promise<Patient[]> {
     const searchLower = query.toLowerCase();
     return mockPatients.filter(
       p =>
         p.name.toLowerCase().includes(searchLower) ||
         p.telephone.includes(query) ||
-        p.email?.toLowerCase().includes(searchLower)
+        p.email?.toLowerCase().includes(searchLower) ||
+        p.qrCode?.toLowerCase().includes(searchLower)
     );
   },
 
@@ -116,9 +122,10 @@ export const mockPatientService = {
     };
   },
 
-  async sendQREmail(_id: string, _email: string): Promise<void> {
-    // For demo, simulate sending email
-    console.log('QR Email sent (demo mode)');
+  async sendQREmail(id: string, email: string): Promise<void> {
+    // Simulate network delay for realistic demo
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    console.log(`QR Email sent to ${email} for patient ${id}`);
   },
 };
 

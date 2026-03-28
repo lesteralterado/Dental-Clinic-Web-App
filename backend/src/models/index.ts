@@ -1,0 +1,12 @@
+export { User } from './User';
+export type { IUser } from './User';
+export { Patient } from './Patient';
+export type { IPatient } from './Patient';
+export { Appointment } from './Appointment';
+export type { IAppointment } from './Appointment';
+export { Treatment } from './Treatment';
+export type { ITreatment } from './Treatment';
+export { Payment } from './Payment';
+export type { IPayment } from './Payment';
+export { Notification } from './Notification';
+export type { INotification } from './Notification';

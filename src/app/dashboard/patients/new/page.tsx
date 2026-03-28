@@ -9,9 +9,8 @@ import {
 } from 'lucide-react';
 import { Patient } from '@/lib/types';
 
-// Use mock data for demo
-const USE_MOCK_DATA = true;
-import { mockPatientService } from '@/lib/mock';
+// Use API services for real backend data
+import { patientService } from '@/lib/api/patients';
 import BoxScanner from '@/components/box-scanner';
 
 interface FormData {
@@ -29,6 +28,7 @@ interface FormData {
   medicalNotes: string;
   allergies: string;
   faceTemplate: string;
+  dateOfBirth: string;
 }
 
 const initialFormData: FormData = {
@@ -46,6 +46,7 @@ const initialFormData: FormData = {
   medicalNotes: '',
   allergies: '',
   faceTemplate: '',
+  dateOfBirth: '',
 };
 
 export default function NewPatientPage() {
@@ -58,11 +59,13 @@ export default function NewPatientPage() {
   const [capturing, setCapturing] = useState(false);
   const [faceCaptured, setFaceCaptured] = useState(false);
   const [createdPatient, setCreatedPatient] = useState<Patient | null>(null);
+  const [sendingEmail, setSendingEmail] = useState(false);
+  const [emailSent, setEmailSent] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
-  // Choose service based on demo mode
-  const patientSvc = USE_MOCK_DATA ? mockPatientService : null;
+  // Use real API service
+  const patientSvc = patientService;
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -161,6 +164,7 @@ export default function NewPatientPage() {
         medicalNotes: formData.medicalNotes || undefined,
         allergies: formData.allergies || undefined,
         faceTemplate: formData.faceTemplate || undefined,
+        dateOfBirth: formData.dateOfBirth ? new Date(formData.dateOfBirth) : undefined,
       };
 
       if (!patientSvc) throw new Error('Service not available');
@@ -177,11 +181,16 @@ export default function NewPatientPage() {
   const sendQREmail = async () => {
     if (!createdPatient?.email) return;
     
+    setSendingEmail(true);
     try {
       if (!patientSvc) throw new Error('Service not available');
       await patientSvc.sendQREmail(createdPatient.id, createdPatient.email);
+      setEmailSent(true);
+      setTimeout(() => setEmailSent(false), 3000);
     } catch (err) {
       console.error('Error sending QR email:', err);
+    } finally {
+      setSendingEmail(false);
     }
   };
 
@@ -208,10 +217,23 @@ export default function NewPatientPage() {
             {createdPatient.email && (
               <button
                 onClick={sendQREmail}
-                className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-xl font-medium shadow-lg shadow-blue-500/30 hover:shadow-xl hover:shadow-blue-500/40 transition-all"
+                disabled={sendingEmail}
+                className={`flex-1 inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-medium shadow-lg shadow-blue-500/30 transition-all ${
+                  sendingEmail
+                    ? 'bg-slate-200 text-slate-500 cursor-not-allowed'
+                    : emailSent
+                    ? 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white'
+                    : 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white hover:shadow-xl hover:shadow-blue-500/40'
+                }`}
               >
-                <Send className="w-5 h-5" />
-                Send QR via Email
+                {sendingEmail ? (
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                ) : emailSent ? (
+                  <Check className="w-5 h-5" />
+                ) : (
+                  <Send className="w-5 h-5" />
+                )}
+                {sendingEmail ? 'Sending...' : emailSent ? 'Sent!' : 'Send QR via Email'}
               </button>
             )}
             <a
@@ -364,10 +386,23 @@ export default function NewPatientPage() {
                     className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
                   >
                     <option value="">Select gender</option>
-                    <option value="Male">Male</option>
-                    <option value="Female">Female</option>
-                    <option value="Other">Other</option>
+                    <option value="male">Male</option>
+                    <option value="female">Female</option>
+                    <option value="other">Other</option>
                   </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                    Date of Birth
+                  </label>
+                  <input
+                    type="date"
+                    name="dateOfBirth"
+                    value={formData.dateOfBirth}
+                    onChange={handleChange}
+                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                  />
                 </div>
 
                 <div>

@@ -3,19 +3,21 @@
 // Place this file in the public folder
 // This runs in the service worker context and handles background push notifications
 
-importScripts('https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js');
-importScripts('https://www.gstatic.com/firebasejs/9.22.0/firebase-messaging-compat.js');
+importScripts('https://www.gstatic.com/firebasejs/12.11.0/firebase-app-compat.js');
+importScripts('https://www.gstatic.com/firebasejs/12.11.0/firebase-messaging-compat.js');
 
 firebase.initializeApp({
-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
-  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
-  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+  apiKey: 'REPLACE_API_KEY',
+  authDomain: 'REPLACE_AUTH_DOMAIN',
+  projectId: 'REPLACE_PROJECT_ID',
+  storageBucket: 'REPLACE_STORAGE_BUCKET',
+  messagingSenderId: 'REPLACE_MESSAGING_SENDER_ID',
+  appId: 'REPLACE_APP_ID',
 });
 
-const messaging = firebase.messaging();
+const messaging = firebase.messaging({
+  vapidKey: 'REPLACE_VAPID_KEY',
+});
 
 // Handle background messages
 messaging.onBackgroundMessage((payload) => {

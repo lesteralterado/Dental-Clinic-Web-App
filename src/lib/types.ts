@@ -58,6 +58,7 @@ export interface PatientFormData {
   medicalNotes?: string;
   allergies?: string;
   faceTemplate?: string;
+  dateOfBirth?: Date;
 }
 
 export interface PatientsResponse {

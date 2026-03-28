@@ -6,7 +6,8 @@ import { Users, Calendar, Clock, CheckCircle, Plus, ArrowRight, QrCode } from 'l
 import { Patient, Appointment } from '@/lib/types';
 import { format } from 'date-fns';
 import { useAppointmentReminders } from '@/hooks/useAppointmentReminders';
-import { mockPatientService, mockAppointmentService } from '@/lib/mock';
+import { patientService } from '@/lib/api/patients';
+import { appointmentService } from '@/lib/api/appointments';
 
 export default function DashboardPage() {
   const [patients, setPatients] = useState<Patient[]>([]);
@@ -14,9 +15,9 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Use mock data for demo
-  const patientSvc = mockPatientService;
-  const appointmentSvc = mockAppointmentService;
+  // Use real API services
+  const patientSvc = patientService;
+  const appointmentSvc = appointmentService;
   
   // Set up appointment reminders
   useAppointmentReminders(appointments);
@@ -35,16 +36,7 @@ export default function DashboardPage() {
         setAppointments(appointmentsData);
       } catch (err) {
         console.error('Failed to fetch dashboard data:', err);
-        setError('Failed to load data. Using mock data for demo.');
-        // Fallback to mock data if API fails
-        if (USE_MOCK_DATA) {
-          const [patientsData, appointmentsData] = await Promise.all([
-            mockPatientService.getRecent(),
-            mockAppointmentService.getToday(),
-          ]);
-          setPatients(patientsData);
-          setAppointments(appointmentsData);
-        }
+        setError('Failed to load data. Please check if the backend is running.');
       } finally {
         setLoading(false);
       }

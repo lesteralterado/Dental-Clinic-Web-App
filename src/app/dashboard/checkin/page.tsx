@@ -9,8 +9,9 @@ import {
 } from 'lucide-react';
 import { Patient, Appointment } from '@/lib/types';
 import jsQR from 'jsqr';
+import { patientService } from '@/lib/api/patients';
+import { appointmentService } from '@/lib/api/appointments';
 import { useNotifications } from '@/hooks/useNotifications';
-import { mockPatientService, mockAppointmentService } from '@/lib/mock';
 import BoxScanner from '@/components/box-scanner';
 
 type TabType = 'qr' | 'face' | 'search';
@@ -29,9 +30,9 @@ export default function CheckInPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<Patient[]>([]);
 
-  // Use mock data for demo
-  const patientSvc = mockPatientService;
-  const appointmentSvc = mockAppointmentService;
+  // Use real API services
+  const patientSvc = patientService;
+  const appointmentSvc = appointmentService;
 
   // QR Scanner refs
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -55,17 +56,38 @@ export default function CheckInPage() {
     setError('');
     try {
       if (!patientSvc || !appointmentSvc) throw new Error('Service not available');
-      const patientData = await patientSvc.getById(id);
+      
+      let patientData: Patient | null = null;
+      
+      // Try to find patient by ID first
+      try {
+        patientData = await patientSvc.getById(id);
+        console.log('[Check-in] Found patient by ID:', id);
+      } catch (e) {
+        // If not found by ID, try to find by qrCode
+        console.log('[Check-in] Patient not found by ID, trying qrCode lookup:', id);
+        const searchResults = await patientSvc.search(id);
+        patientData = searchResults[0] || null;
+        
+        if (patientData) {
+          console.log('[Check-in] Found patient by search:', patientData.id);
+        }
+      }
+      
+      if (!patientData) {
+        throw new Error('Patient not found. Please check the QR code or try searching manually.');
+      }
+      
       setPatient(patientData);
       
       // Get today's appointments for this patient
       const today = new Date().toISOString().split('T')[0];
       const allAppointments = await appointmentSvc.getAll({ date: today });
-      const patientAppointments = allAppointments.filter(a => a.patientId === id);
+      const patientAppointments = allAppointments.filter(a => a.patientId === patientData!.id);
       setAppointments(patientAppointments);
-    } catch (err) {
+    } catch (err: any) {
       console.error('Failed to load patient:', err);
-      setError('Failed to load patient information');
+      setError(err.message || 'Failed to load patient information');
     } finally {
       setLoading(false);
     }

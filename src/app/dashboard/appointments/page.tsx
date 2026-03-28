@@ -10,9 +10,9 @@ import { Appointment, Patient } from '@/lib/types';
 import { format, addDays, startOfWeek, isSameDay } from 'date-fns';
 import Link from 'next/link';
 
-// Use mock data for demo
-const USE_MOCK_DATA = true;
-import { mockAppointmentService, mockPatientService } from '@/lib/mock';
+// Use API services for real backend data
+import { appointmentService } from '@/lib/api/appointments';
+import { patientService } from '@/lib/api/patients';
 
 export default function AppointmentsPage() {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
@@ -21,9 +21,9 @@ export default function AppointmentsPage() {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [view, setView] = useState<'day' | 'week'>('day');
 
-  // Choose service based on demo mode
-  const appointmentSvc = USE_MOCK_DATA ? mockAppointmentService : null;
-  const patientSvc = USE_MOCK_DATA ? mockPatientService : null;
+  // Use real API services
+  const appointmentSvc = appointmentService;
+  const patientSvc = patientService;
 
   useEffect(() => {
     const fetchData = async () => {
