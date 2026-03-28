@@ -1,5 +1,5 @@
 import { Patient, IPatient } from '../models';
-import { AppError } from '../middleware/error';
+import { AppError, ErrorCode } from '../middleware/error';
 import { logger } from '../utils/logger';
 import { v4 as uuidv4 } from 'uuid';
 import QRCode from 'qrcode';
@@ -78,7 +78,7 @@ export const patientService = {
     const patient = await Patient.findById(id);
     
     if (!patient) {
-      throw new AppError('Patient not found', 404);
+      throw new AppError('Patient not found', 404, ErrorCode.RESOURCE_NOT_FOUND);
     }
 
     return patient;
@@ -88,7 +88,7 @@ export const patientService = {
     const patient = await Patient.findOne({ qrCode });
     
     if (!patient) {
-      throw new AppError('Patient not found with this QR code', 404);
+      throw new AppError('Patient not found with this QR code', 404, ErrorCode.RESOURCE_NOT_FOUND);
     }
 
     return patient;
@@ -196,7 +196,7 @@ export const patientService = {
     );
 
     if (!patient) {
-      throw new AppError('Patient not found', 404);
+      throw new AppError('Patient not found', 404, ErrorCode.RESOURCE_NOT_FOUND);
     }
 
     logger.info(`Patient updated: ${id}`);
@@ -207,7 +207,7 @@ export const patientService = {
     const patient = await Patient.findByIdAndDelete(id);
 
     if (!patient) {
-      throw new AppError('Patient not found', 404);
+      throw new AppError('Patient not found', 404, ErrorCode.RESOURCE_NOT_FOUND);
     }
 
     logger.info(`Patient deleted: ${id}`);
@@ -217,7 +217,7 @@ export const patientService = {
     const patient = await Patient.findById(id);
     
     if (!patient) {
-      throw new AppError('Patient not found', 404);
+      throw new AppError('Patient not found', 404, ErrorCode.RESOURCE_NOT_FOUND);
     }
 
     if (!patient.qrCode) {

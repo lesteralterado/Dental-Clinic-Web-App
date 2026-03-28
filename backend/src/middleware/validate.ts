@@ -32,6 +32,27 @@ export const registerSchema = Joi.object({
   role: Joi.string().valid('admin', 'doctor', 'receptionist').required(),
 });
 
+// Password reset schemas
+export const forgotPasswordSchema = Joi.object({
+  email: Joi.string().email().max(255).required()
+    .messages({ 'string.email': 'Please provide a valid email address' }),
+});
+
+export const resetPasswordSchema = Joi.object({
+  token: Joi.string().min(64).max(64).required()
+    .messages({ 'string.min': 'Invalid reset token', 'string.max': 'Invalid reset token' }),
+  newPassword: Joi.string()
+    .min(8)
+    .max(72) // bcrypt max
+    .pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/)
+    .required()
+    .messages({
+      'string.min': 'Password must be at least 8 characters',
+      'string.max': 'Password must be less than 72 characters',
+      'string.pattern.base': 'Password must contain at least one uppercase letter, lowercase letter, number, and special character (@$!%*?&)',
+    }),
+});
+
 // Patient schemas - ENHANCED with stricter validation
 export const createPatientSchema = Joi.object({
   name: Joi.string().min(2).max(100).trim().required()
@@ -164,4 +185,4 @@ export const appointmentQuerySchema = Joi.object({
   date: Joi.date().allow('', null),
 });
 
-export default { validate, loginSchema, registerSchema, createPatientSchema, updatePatientSchema, createAppointmentSchema, updateAppointmentSchema, createTreatmentSchema, createPaymentSchema, registerTokenSchema, paginationSchema, patientQuerySchema, appointmentQuerySchema };
+export default { validate, loginSchema, registerSchema, forgotPasswordSchema, resetPasswordSchema, createPatientSchema, updatePatientSchema, createAppointmentSchema, updateAppointmentSchema, createTreatmentSchema, createPaymentSchema, registerTokenSchema, paginationSchema, patientQuerySchema, appointmentQuerySchema };

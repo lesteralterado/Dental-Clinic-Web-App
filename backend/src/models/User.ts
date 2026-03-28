@@ -10,6 +10,15 @@ export interface IUser extends Document {
   isActive: boolean;
   createdAt: Date;
   updatedAt: Date;
+  // Password reset fields
+  resetPasswordToken?: string;
+  resetPasswordExpires?: Date;
+  passwordHistory?: Array<{
+    password: string;
+    changedAt: Date;
+  }>;
+  failedLoginAttempts?: number;
+  lockUntil?: Date;
   comparePassword(candidatePassword: string): Promise<boolean>;
 }
 
@@ -41,6 +50,32 @@ const userSchema = new Schema<IUser>(
       type: Boolean,
       default: true,
     },
+    // Password reset fields
+    resetPasswordToken: {
+      type: String,
+      default: undefined,
+    },
+    resetPasswordExpires: {
+      type: Date,
+      default: undefined,
+    },
+    // Password history for preventing reuse
+    passwordHistory: {
+      type: [{
+        password: String,
+        changedAt: Date,
+      }],
+      default: [],
+    },
+    // Account lockout for failed login attempts
+    failedLoginAttempts: {
+      type: Number,
+      default: 0,
+    },
+    lockUntil: {
+      type: Date,
+      default: undefined,
+    },
   },
   {
     timestamps: true,
@@ -64,6 +99,15 @@ userSchema.pre('save', async function (next) {
 userSchema.methods.comparePassword = async function (candidatePassword: string): Promise<boolean> {
   return bcrypt.compare(candidatePassword, this.password);
 };
+
+// Index for role-based queries
+userSchema.index({ role: 1 });
+
+// Index for active user filtering
+userSchema.index({ isActive: 1 });
+
+// Index for password reset lookups (sparse - only indexes documents with this field)
+userSchema.index({ resetPasswordToken: 1 }, { sparse: true });
 
 export const User = mongoose.model<IUser>('User', userSchema);
 

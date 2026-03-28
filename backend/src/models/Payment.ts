@@ -76,6 +76,12 @@ const paymentSchema = new Schema<IPayment>(
 // Index for querying by patient
 paymentSchema.index({ patientId: 1, date: -1 });
 
+// Index for daily revenue queries
+paymentSchema.index({ date: 1, status: 1 });
+
+// Index for payment filtering
+paymentSchema.index({ status: 1 });
+
 export const Payment = mongoose.model<IPayment>('Payment', paymentSchema);
 
 export default Payment;

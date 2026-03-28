@@ -1,5 +1,5 @@
 import { Appointment, IAppointment, Patient, User } from '../models';
-import { AppError } from '../middleware/error';
+import { AppError, ErrorCode } from '../middleware/error';
 import { logger } from '../utils/logger';
 import mongoose from 'mongoose';
 import { sanitizeString, sanitizeSearchQuery } from '../utils/sanitizer';

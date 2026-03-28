@@ -102,6 +102,27 @@ export const authService = {
   getAccessToken(): string | null {
     return localStorage.getItem('accessToken');
   },
+
+  // Password Reset Methods
+  async requestPasswordReset(email: string): Promise<{ message: string }> {
+    const response = await apiClient.post<{ message: string }>('/auth/forgot-password', { email });
+    return response.data;
+  },
+
+  async resetPassword(token: string, newPassword: string): Promise<{ message: string }> {
+    const response = await apiClient.post<{ message: string }>('/auth/reset-password', {
+      token,
+      newPassword,
+    });
+    return response.data;
+  },
+
+  async validateResetToken(token: string): Promise<{ valid: boolean; message: string; expiresAt?: Date }> {
+    const response = await apiClient.get<{ valid: boolean; message: string; expiresAt?: Date }>(
+      `/auth/validate-reset-token?token=${token}`
+    );
+    return response.data;
+  },
 };
 
 export default authService;

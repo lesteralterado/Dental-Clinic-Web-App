@@ -6,6 +6,8 @@ import { connectDatabase, disconnectDatabase } from './config/database';
 import { initializeFirebase } from './config/firebase';
 import { startReminderJob, startCleanupJob } from './jobs/reminders';
 import { logger } from './utils/logger';
+import { alertService } from './services/alertService';
+import { getTransactionStatus } from './utils/transactionManager';
 
 const PORT = process.env.PORT || 3001;
 
@@ -15,6 +17,10 @@ const startServer = async (): Promise<void> => {
   try {
     // Connect to database
     await connectDatabase();
+    
+    // Log transaction support status
+    const txStatus = getTransactionStatus();
+    logger.info(`Transaction support: ${txStatus.supported ? 'enabled' : 'disabled'} (topology: ${txStatus.topologyType})`);
     
     // Initialize Firebase (optional - won't fail if not configured)
     try {
@@ -26,6 +32,9 @@ const startServer = async (): Promise<void> => {
     // Start background jobs
     startReminderJob();
     startCleanupJob();
+    
+    // Start alert service
+    alertService.start();
     
     // Start server
     server = app.listen(PORT, () => {
@@ -56,6 +65,9 @@ const gracefulShutdown = async (signal: string) => {
   // Stop background jobs
   // Note: The jobs are managed by node-cron and will stop when process exits
   logger.info('✅ Background jobs will stop');
+  
+  // Stop alert service
+  alertService.stop();
   
   // Close database connection
   try {

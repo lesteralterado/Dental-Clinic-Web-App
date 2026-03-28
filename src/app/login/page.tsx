@@ -172,6 +172,16 @@ export default function LoginPage() {
               Password: <span className="font-mono text-slate-800">admin123</span>
             </p>
           </motion.div>
+
+          {/* Forgot Password */}
+          <div className="text-center mt-4">
+            <a
+              href="/forgot-password"
+              className="text-sm text-slate-500 hover:text-blue-600 transition-colors"
+            >
+              Forgot Password?
+            </a>
+          </div>
         </div>
 
         {/* Back to Home */}

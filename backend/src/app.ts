@@ -1,5 +1,4 @@
 import express, { Application, Request, Response, NextFunction } from 'express';
-import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
 import cookieParser from 'cookie-parser';
@@ -11,10 +10,14 @@ import mongoose from 'mongoose';
 dotenv.config();
 
 import routes from './routes';
-import { errorHandler, notFoundHandler } from './middleware/error';
+import { errorHandler, notFoundHandler, requestIdMiddleware } from './middleware/error';
 import { logger } from './utils/logger';
+import { enhancedCors, logCorsConfig } from './middleware/cors';
 
 const app: Application = express();
+
+// Request ID tracking for better error tracing
+app.use(requestIdMiddleware);
 
 // Security middleware - ENHANCED with CSP
 app.use(helmet({
@@ -35,10 +38,7 @@ app.use(helmet({
   crossOriginEmbedderPolicy: false, // Allow embedding for images/fonts
 }));
 
-app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
-  credentials: true,
-}));
+app.use(enhancedCors);
 
 // Rate limiting
 const limiter = rateLimit({

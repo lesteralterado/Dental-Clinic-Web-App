@@ -54,6 +54,9 @@ const notificationSchema = new Schema<INotification>(
 notificationSchema.index({ userId: 1, createdAt: -1 });
 notificationSchema.index({ userId: 1, isRead: 1 });
 
+// Index for notification type filtering
+notificationSchema.index({ userId: 1, type: 1 });
+
 export const Notification = mongoose.model<INotification>('Notification', notificationSchema);
 
 export default Notification;

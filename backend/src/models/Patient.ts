@@ -118,6 +118,21 @@ const patientSchema = new Schema<IPatient>(
 // Index for searching
 patientSchema.index({ name: 'text', telephone: 'text', email: 'text' });
 
+// Index for QR code lookups
+patientSchema.index({ qrCode: 1 }, { sparse: true });
+
+// Index for status filtering
+patientSchema.index({ status: 1 });
+
+// Index for frequent patient queries
+patientSchema.index({ isFrequent: 1 });
+
+// Index for recent patients sorting
+patientSchema.index({ lastVisit: -1 });
+
+// Index for newest patients sorting
+patientSchema.index({ createdAt: -1 });
+
 export const Patient = mongoose.model<IPatient>('Patient', patientSchema);
 
 export default Patient;

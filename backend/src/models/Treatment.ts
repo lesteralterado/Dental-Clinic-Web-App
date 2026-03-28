@@ -62,6 +62,15 @@ const treatmentSchema = new Schema<ITreatment>(
 // Compound index for unique record number per patient
 treatmentSchema.index({ patientId: 1, recordNo: 1 }, { unique: true });
 
+// Index for patient's treatment history
+treatmentSchema.index({ patientId: 1, recordDate: -1 });
+
+// Index for dentist's treatment records
+treatmentSchema.index({ dentistId: 1, recordDate: -1 });
+
+// Index for date range queries
+treatmentSchema.index({ recordDate: -1 });
+
 export const Treatment = mongoose.model<ITreatment>('Treatment', treatmentSchema);
 
 export default Treatment;

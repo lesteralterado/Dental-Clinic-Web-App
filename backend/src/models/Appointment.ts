@@ -82,6 +82,21 @@ appointmentSchema.index(
 // Index for querying
 appointmentSchema.index({ appointmentDate: 1, status: 1 });
 
+// Index for patient-specific lookups
+appointmentSchema.index({ patientId: 1 });
+
+// Index for patient's appointment history
+appointmentSchema.index({ patientId: 1, appointmentDate: -1 });
+
+// Index for reminder job queries
+appointmentSchema.index({ reminderSent: 1, appointmentDate: 1 });
+
+// Index for filtered appointment lists
+appointmentSchema.index({ status: 1, appointmentDate: 1 });
+
+// Index for check-in status queries
+appointmentSchema.index({ isCheckedIn: 1 });
+
 export const Appointment = mongoose.model<IAppointment>('Appointment', appointmentSchema);
 
 export default Appointment;
