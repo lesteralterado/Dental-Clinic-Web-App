@@ -3,6 +3,7 @@ import { AppError } from '../middleware/error';
 import { logger } from '../utils/logger';
 import { v4 as uuidv4 } from 'uuid';
 import QRCode from 'qrcode';
+import { sanitizeSearchQuery, sanitizeString } from '../utils/sanitizer';
 
 export interface CreatePatientData {
   name: string;
@@ -38,17 +39,32 @@ export const patientService = {
     // Generate unique QR code
     const qrCodeId = `DENTAL-${uuidv4().substring(0, 8).toUpperCase()}`;
     
+    // SANITIZE: Sanitize string inputs to prevent injection
+    const sanitizedData = {
+      ...data,
+      name: sanitizeString(data.name, 100),
+      address: sanitizeString(data.address, 500),
+      telephone: sanitizeString(data.telephone, 20),
+      occupation: sanitizeString(data.occupation || 'Not specified', 100),
+      complaint: sanitizeString(data.complaint, 2000),
+      email: data.email ? sanitizeString(data.email, 255) : undefined,
+      emergencyContact: data.emergencyContact ? sanitizeString(data.emergencyContact, 100) : undefined,
+      emergencyPhone: data.emergencyPhone ? sanitizeString(data.emergencyPhone, 20) : undefined,
+      medicalNotes: data.medicalNotes ? sanitizeString(data.medicalNotes, 5000) : undefined,
+      allergies: data.allergies ? sanitizeString(data.allergies, 1000) : undefined,
+    };
+    
     // Normalize gender to lowercase if provided
-    const normalizedGender = data.gender?.toLowerCase() as 'male' | 'female' | 'other' | undefined;
+    const normalizedGender = sanitizedData.gender?.toLowerCase() as 'male' | 'female' | 'other' | undefined;
     
     const patient = await Patient.create({
-      ...data,
+      ...sanitizedData,
       // Normalize gender to lowercase
       gender: normalizedGender,
       // Provide defaults for missing optional fields
-      occupation: data.occupation || 'Not specified',
-      complaint: data.complaint || 'No complaint',
-      faceTemplate: data.faceTemplate || undefined,
+      occupation: sanitizedData.occupation || 'Not specified',
+      complaint: sanitizedData.complaint || 'No complaint',
+      faceTemplate: sanitizedData.faceTemplate || undefined,
       qrCode: qrCodeId,
       status: 'new',
       isFrequent: false,
@@ -85,15 +101,24 @@ export const patientService = {
     const query: Record<string, unknown> = {};
     
     if (search) {
-      query.$or = [
-        { name: { $regex: search, $options: 'i' } },
-        { telephone: { $regex: search, $options: 'i' } },
-        { email: { $regex: search, $options: 'i' } },
-      ];
+      // SANITIZE: Prevent regex injection by sanitizing search input
+      const sanitizedSearch = sanitizeSearchQuery(search);
+      
+      if (sanitizedSearch) {
+        query.$or = [
+          { name: { $regex: sanitizedSearch, $options: 'i' } },
+          { telephone: { $regex: sanitizedSearch, $options: 'i' } },
+          { email: { $regex: sanitizedSearch, $options: 'i' } },
+        ];
+      }
     }
     
     if (status) {
-      query.status = status;
+      // SANITIZE: Only allow valid status values
+      const validStatuses = ['new', 'regular', 'archived'];
+      if (validStatuses.includes(status)) {
+        query.status = status;
+      }
     }
 
     const patients = await Patient.find(query)
@@ -117,9 +142,56 @@ export const patientService = {
   },
 
   async update(id: string, data: UpdatePatientData): Promise<IPatient> {
+    // SANITIZE: Sanitize string inputs to prevent injection
+    const sanitizedData: UpdatePatientData = {};
+    
+    if (data.name !== undefined) {
+      sanitizedData.name = sanitizeString(data.name, 100);
+    }
+    if (data.address !== undefined) {
+      sanitizedData.address = sanitizeString(data.address, 500);
+    }
+    if (data.telephone !== undefined) {
+      sanitizedData.telephone = sanitizeString(data.telephone, 20);
+    }
+    if (data.occupation !== undefined) {
+      sanitizedData.occupation = sanitizeString(data.occupation, 100);
+    }
+    if (data.complaint !== undefined) {
+      sanitizedData.complaint = sanitizeString(data.complaint, 2000);
+    }
+    if (data.gender !== undefined) {
+      sanitizedData.gender = data.gender.toLowerCase() as 'male' | 'female' | 'other';
+    }
+    if (data.email !== undefined) {
+      sanitizedData.email = data.email ? sanitizeString(data.email, 255) : undefined;
+    }
+    if (data.emergencyContact !== undefined) {
+      sanitizedData.emergencyContact = data.emergencyContact ? sanitizeString(data.emergencyContact, 100) : undefined;
+    }
+    if (data.emergencyPhone !== undefined) {
+      sanitizedData.emergencyPhone = data.emergencyPhone ? sanitizeString(data.emergencyPhone, 20) : undefined;
+    }
+    if (data.medicalNotes !== undefined) {
+      sanitizedData.medicalNotes = data.medicalNotes ? sanitizeString(data.medicalNotes, 5000) : undefined;
+    }
+    if (data.allergies !== undefined) {
+      sanitizedData.allergies = data.allergies ? sanitizeString(data.allergies, 1000) : undefined;
+    }
+    if (data.status !== undefined) {
+      // Only allow valid status values
+      const validStatuses = ['new', 'regular', 'archived'];
+      if (validStatuses.includes(data.status)) {
+        sanitizedData.status = data.status;
+      }
+    }
+    if (data.isFrequent !== undefined) {
+      sanitizedData.isFrequent = data.isFrequent;
+    }
+
     const patient = await Patient.findByIdAndUpdate(
       id,
-      { $set: data },
+      { $set: sanitizedData },
       { new: true, runValidators: true }
     );
 

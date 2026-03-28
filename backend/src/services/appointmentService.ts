@@ -2,6 +2,7 @@ import { Appointment, IAppointment, Patient, User } from '../models';
 import { AppError } from '../middleware/error';
 import { logger } from '../utils/logger';
 import mongoose from 'mongoose';
+import { sanitizeString, sanitizeSearchQuery } from '../utils/sanitizer';
 
 export interface CreateAppointmentData {
   patientId: string;
@@ -28,8 +29,19 @@ export interface AppointmentQueryParams {
 
 export const appointmentService = {
   async create(data: CreateAppointmentData): Promise<IAppointment> {
+    // SANITIZE: Sanitize string inputs
+    const sanitizedData = {
+      patientId: data.patientId,
+      dentistId: data.dentistId,
+      appointmentDate: data.appointmentDate,
+      appointmentTime: sanitizeString(data.appointmentTime, 10),
+      duration: data.duration || 30,
+      reason: sanitizeString(data.reason, 500),
+      notes: data.notes ? sanitizeString(data.notes, 2000) : undefined,
+    };
+
     // Check if patient exists
-    const patient = await Patient.findById(data.patientId);
+    const patient = await Patient.findById(sanitizedData.patientId);
     if (!patient) {
       throw new AppError('Patient not found', 404);
     }
@@ -42,9 +54,9 @@ export const appointmentService = {
 
     // Check for double booking
     const existingAppointment = await Appointment.findOne({
-      dentistId: data.dentistId,
-      appointmentDate: data.appointmentDate,
-      appointmentTime: data.appointmentTime,
+      dentistId: sanitizedData.dentistId,
+      appointmentDate: sanitizedData.appointmentDate,
+      appointmentTime: sanitizedData.appointmentTime,
       status: { $nin: ['cancelled'] },
     });
 
@@ -53,14 +65,14 @@ export const appointmentService = {
     }
 
     const appointment = await Appointment.create({
-      ...data,
+      ...sanitizedData,
       status: 'scheduled',
       isCheckedIn: false,
       reminderSent: false,
     });
 
     // Update patient's last visit if this is their first appointment
-    const appointmentCount = await Appointment.countDocuments({ patientId: data.patientId });
+    const appointmentCount = await Appointment.countDocuments({ patientId: sanitizedData.patientId });
     if (appointmentCount === 1) {
       await Patient.findByIdAndUpdate(data.patientId, {
         isFrequent: true,
@@ -143,9 +155,32 @@ export const appointmentService = {
   },
 
   async update(id: string, data: UpdateAppointmentData): Promise<IAppointment> {
+    // SANITIZE: Sanitize string inputs
+    const sanitizedData: UpdateAppointmentData = {};
+    
+    if (data.appointmentTime !== undefined) {
+      sanitizedData.appointmentTime = sanitizeString(data.appointmentTime, 10);
+    }
+    if (data.duration !== undefined) {
+      sanitizedData.duration = data.duration;
+    }
+    if (data.reason !== undefined) {
+      sanitizedData.reason = sanitizeString(data.reason, 500);
+    }
+    if (data.notes !== undefined) {
+      sanitizedData.notes = data.notes ? sanitizeString(data.notes, 2000) : undefined;
+    }
+    if (data.status !== undefined) {
+      // Only allow valid status values
+      const validStatuses = ['scheduled', 'confirmed', 'completed', 'cancelled', 'no-show'];
+      if (validStatuses.includes(data.status)) {
+        sanitizedData.status = data.status;
+      }
+    }
+
     const appointment = await Appointment.findByIdAndUpdate(
       id,
-      { $set: data },
+      { $set: sanitizedData },
       { new: true, runValidators: true }
     );
 
